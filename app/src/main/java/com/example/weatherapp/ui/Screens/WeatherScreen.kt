@@ -1,9 +1,12 @@
-package com.example.weatherapp
+package com.example.weatherapp.ui.Screens
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -24,10 +27,14 @@ import com.example.weatherapp.data.CurrentWeatherResponse
 import com.example.weatherapp.data.ForecastItem
 import com.example.weatherapp.data.ForecastResponse
 import com.example.weatherapp.weatherRepository.WeatherViewModel
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
+import java.time.format.TextStyle
 import java.util.*
 import kotlin.math.roundToInt
 
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun WeatherScreen(viewModel: WeatherViewModel) {
     val uiState by viewModel.uiState.collectAsState()
@@ -38,15 +45,21 @@ fun WeatherScreen(viewModel: WeatherViewModel) {
         viewModel.fetchWeather(city)
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Color(0xFFF0F4F8)
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Weather App", fontWeight = FontWeight.Bold) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    titleContentColor = Color(0xFF333333)
+                )
+            )
+        },
+        bottomBar = {
+            BottomAppBar(
+                containerColor = Color.White,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                tonalElevation = 8.dp
             ) {
                 OutlinedTextField(
                     value = city,
@@ -67,31 +80,62 @@ fun WeatherScreen(viewModel: WeatherViewModel) {
                         focusedIndicatorColor = Color(0xFF5C6BC0),
                     )
                 )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Content based on state
-                when {
-                    uiState.isLoading -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+            }
+        },
+        containerColor = Color(0xFFF0F4F8)
+    ) { paddingValues ->
+        // TODO: ANIMATION - Crossfade between loading, error, and content states.
+        Crossfade(targetState = uiState, animationSpec = tween(500), label = "main_crossfade") { state ->
+            when {
+                state.isLoading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+                state.error != null -> {
+                    Text(
+                        text = state.error!!,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues)
+                            .padding(16.dp)
+                    )
+                }
+                state.currentWeather != null && state.forecast != null -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues)
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        // TODO: ANIMATION - Main weather card slides and fades in from the top.
+                        AnimatedVisibility(
+                            visible = true,
+                            modifier = Modifier.weight(1f),
+                            enter = slideInVertically(
+                                initialOffsetY = { -it },
+                                animationSpec = tween(durationMillis = 600, easing = EaseOutCubic)
+                            ) + fadeIn(animationSpec = tween(600))
                         ) {
-                            CircularProgressIndicator()
+                            CurrentWeatherCard(state.currentWeather!!)
                         }
-                    }
-                    uiState.error != null -> {
-                        Text(
-                            text = uiState.error!!,
-                            color = MaterialTheme.colorScheme.error,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().padding(16.dp)
-                        )
-                    }
-                    uiState.currentWeather != null && uiState.forecast != null -> {
-                        CurrentWeatherCard(uiState.currentWeather!!)
                         Spacer(modifier = Modifier.height(24.dp))
-                        HourlyForecast(uiState.forecast!!)
+                        // TODO: ANIMATION - Hourly forecast section slides and fades in from the bottom.
+                        AnimatedVisibility(
+                            visible = true,
+                            enter = slideInVertically(
+                                initialOffsetY = { it },
+                                animationSpec = tween(durationMillis = 600, delayMillis = 200, easing = EaseOutCubic)
+                            ) + fadeIn(animationSpec = tween(600, delayMillis = 200))
+                        ) {
+                            HourlyForecast(state.forecast!!)
+                        }
                     }
                 }
             }
@@ -101,13 +145,25 @@ fun WeatherScreen(viewModel: WeatherViewModel) {
 
 @Composable
 fun CurrentWeatherCard(currentWeather: CurrentWeatherResponse) {
+    val targetTemperature = currentWeather.main.temperature
+    // TODO: ANIMATION - Temperature value animates as a counter from 0 to the target value.
+    val animatedTemperature = remember { Animatable(0f) }
+
+    LaunchedEffect(targetTemperature) {
+        animatedTemperature.animateTo(
+            targetValue = targetTemperature.toFloat(),
+            animationSpec = tween(durationMillis = 1500, easing = LinearOutSlowInEasing)
+        )
+    }
+
     Card(
         shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxSize(),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Box(
             modifier = Modifier
+                .fillMaxSize()
                 .background(
                     Brush.linearGradient(
                         colors = listOf(Color(0xFF3F51B5), Color(0xFF5C6BC0))
@@ -115,7 +171,10 @@ fun CurrentWeatherCard(currentWeather: CurrentWeatherResponse) {
                 )
                 .padding(24.dp)
         ) {
-            Column {
+            Column(
+                modifier = Modifier.fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -135,23 +194,25 @@ fun CurrentWeatherCard(currentWeather: CurrentWeatherResponse) {
                         )
                     }
                     AsyncImage(
-                        model = "https://openweathermap.org/img/wn/${currentWeather.weather.first().icon}@2x.png",
+                        model = "https://openweathermap.org/img/wn/${currentWeather.weather.first().icon}@4x.png",
                         contentDescription = "Weather Icon",
                         modifier = Modifier.size(80.dp)
                     )
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "${currentWeather.main.temperature.roundToInt()}°",
-                    color = Color.White,
-                    fontSize = 72.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = currentWeather.weather.first().main,
-                    color = Color.White,
-                    fontSize = 22.sp
-                )
+
+                Column {
+                    Text(
+                        text = "${animatedTemperature.value.roundToInt()}°",
+                        color = Color.White,
+                        fontSize = 72.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = currentWeather.weather.first().main,
+                        color = Color.White,
+                        fontSize = 22.sp
+                    )
+                }
             }
         }
     }
@@ -168,14 +229,30 @@ fun HourlyForecast(forecast: ForecastResponse) {
         )
         Spacer(modifier = Modifier.height(8.dp))
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(vertical = 8.dp)
         ) {
-            items(forecast.list.take(8)) { forecastItem ->
-                HourlyForecastItem(forecastItem)
+            // TODO: ANIMATION - Each forecast item animates in with a staggered delay.
+            itemsIndexed(
+                items = forecast.list.take(10),
+                key = { _, item -> item.dateTime }
+            ) { index, forecastItem ->
+                var visible by remember { mutableStateOf(false) }
+                LaunchedEffect(Unit) {
+                    delay(index * 100L + 400L) // Staggered delay
+                    visible = true
+                }
+                AnimatedVisibility(
+                    visible = visible,
+                    enter = fadeIn(animationSpec = tween(500)) + slideInVertically(animationSpec = tween(500))
+                ) {
+                    HourlyForecastItem(forecastItem)
+                }
             }
         }
     }
 }
+
 
 @Composable
 fun HourlyForecastItem(item: ForecastItem) {
@@ -186,7 +263,7 @@ fun HourlyForecastItem(item: ForecastItem) {
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        border = BorderStroke(1.dp, Color(0xFFE0E0E0))
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -208,3 +285,4 @@ fun HourlyForecastItem(item: ForecastItem) {
         }
     }
 }
+

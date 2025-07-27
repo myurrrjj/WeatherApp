@@ -13,7 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.ViewModel
+import com.example.weatherapp.ui.Screens.WeatherScreen
 import com.example.weatherapp.weatherRepository.WeatherViewModel
 import kotlin.getValue
 
