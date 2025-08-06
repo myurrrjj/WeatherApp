@@ -61,14 +61,5 @@ Stunning custom theme with Light and Dark mode support, adapting to system setti
 | **Jetpack DataStore**  | Persistent, asynchronous storage of preferences                            |
 | **Coil**               | Fast and easy image loading (e.g., weather icons)                          |
 
----
 
-## 📸 Screenshots
 
-```md
-<!-- Add your actual image paths in the "src" below -->
-<div align="center">
-  <img src="screenshots/home_light.png" alt="Home - Light Mode" width="250" />
-  <img src="screenshots/home_dark.png" alt="Home - Dark Mode" width="250" />
-  <img src="screenshots/forecast.png" alt="7-Day Forecast" width="250" />
-</div>
