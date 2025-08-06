@@ -1,60 +1,44 @@
 package com.example.weatherapp.weatherRepository
 
-import com.example.weatherapp.RetrofitClient
+import com.example.weatherapp.WeatherApiService
 import com.example.weatherapp.data.CurrentWeatherResponse
 import com.example.weatherapp.data.ForecastResponse
 
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
+interface WeatherRepository {
 
-data class WeatherUiState(
-    val currentWeather: CurrentWeatherResponse? = null,
-    val forecast: ForecastResponse? = null,
-    val isLoading: Boolean = false,
-    val error: String? = null
-)
+    suspend fun getCurrentWeather(city: String): CurrentWeatherResponse
 
-class WeatherRepository {
-    private val apiService = RetrofitClient.apiService
+    suspend fun getForecast(city: String): ForecastResponse
 
-    suspend fun getCurrentWeather(city: String): CurrentWeatherResponse {
-        return apiService.getCurrentWeather(city)
-    }
+    suspend fun getCurrentWeatherByCoords(lat: Double,lon: Double) : CurrentWeatherResponse
 
-    suspend fun getForecast(city: String): ForecastResponse {
-        return apiService.getForecast(city)
-    }
+    suspend fun getForecastByCoords(lat: Double,lon: Double) : ForecastResponse
 }
 
-class WeatherViewModel : ViewModel() {
+class DefaultWeatherRepository(private val weatherApiService: WeatherApiService) :
+    WeatherRepository {
+    override suspend fun getCurrentWeather(city: String): CurrentWeatherResponse {
+        return weatherApiService.getCurrentWeather(city)
 
-    private val repository = WeatherRepository()
-
-    private val _uiState = MutableStateFlow(WeatherUiState())
-    val uiState = _uiState.asStateFlow()
-
-    fun fetchWeather(city: String) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            try {
-                val current = repository.getCurrentWeather(city)
-                val forecastData = repository.getForecast(city)
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    currentWeather = current,
-                    forecast = forecastData
-                )
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    error = "Failed to fetch weather data for '$city'. Please try again."
-                )
-            }
-        }
     }
+
+    override suspend fun getForecast(city: String): ForecastResponse {
+        return weatherApiService.getForecast(city)
+    }
+
+
+   override suspend fun getCurrentWeatherByCoords(lat: Double, lon: Double): CurrentWeatherResponse {
+        return weatherApiService.getCurrentWeatherByCoords(lat, lon)
+    }
+
+   override suspend fun getForecastByCoords(lat: Double, lon: Double): ForecastResponse {
+        return weatherApiService.getForecastByCoords(lat, lon)
+    }
+
+
 }
+
+
+
 

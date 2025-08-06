@@ -2,10 +2,16 @@ package com.example.weatherapp.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Light Theme Colors
+val LightPrimary = Color(0xFF4A90E2)
+val LightSecondary = Color(0xFF50E3C2)
+val LightBackground = Color(0xFFF0F4F8)
+val LightSurface = Color.White
+val OnLightText = Color(0xFF1D1D1F)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+
+val DarkPrimary = Color(0xFF4A90E2)
+val DarkSecondary = Color(0xFF50E3C2)
+val DarkBackground = Color(0xFF0D1B2A)
+val DarkSurface = Color(0xFF1B263B)
+val OnDarkText = Color(0xFFE0E0E0)

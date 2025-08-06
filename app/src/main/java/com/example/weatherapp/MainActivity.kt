@@ -3,19 +3,11 @@ package com.example.weatherapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.weatherapp.ui.Screens.WeatherScreen
-import com.example.weatherapp.weatherRepository.WeatherViewModel
-import kotlin.getValue
+import com.example.weatherapp.ui.theme.WeatherAppTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,38 +18,11 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                     val weatherViewModel: WeatherViewModel by viewModels()
-                    WeatherScreen(viewModel = weatherViewModel)
+
+                    App()
                 }
             }
         }
     }
 }
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(
-            text = "Hello $name!",
-            modifier = modifier
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    WeatherAppTheme {
-        Greeting("Android")
-    }
-}
-
-// You will also need a Theme.kt file. If you don't have one, create it.
-// res/values/themes.xml should also be set up correctly by default.
-// For now, let's assume a basic Theme.kt exists.
-@Composable
-fun WeatherAppTheme(content: @Composable () -> Unit) {
-    MaterialTheme(
-        content = content
-    )
-}
